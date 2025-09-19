@@ -1,10 +1,10 @@
 "use client"
 
 import type React from "react"
-import { motion } from 'framer-motion';
 import { useState, useEffect } from "react"
 import dynamic from "next/dynamic"
 import Image from "next/image"
+import { motion, useScroll, useTransform } from 'framer-motion'
 import { Button } from "@/components/ui/button"
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card"
 import { Input } from "@/components/ui/input"
@@ -43,7 +43,6 @@ import {
 const Map = dynamic(() => import("@/components/Map"), {
   ssr: false,
 });
-
 
 // --- Data for sections (moved outside the component for better readability) ---
 
@@ -88,7 +87,7 @@ const scheduleData = [
     icon: Laptop,
   },
   {
-    time: "1.00 PM",
+    time: "1:00 PM",
     title: "Lunch & Networking",
     description: "Connect with fellow developers over lunch",
     icon: Utensils,
@@ -119,6 +118,26 @@ const socialLinks = [
   { icon: Instagram, color: "hover:text-pink-500", label: "Instagram", url: "#" },
   { icon: Youtube, color: "hover:text-red-500", label: "YouTube", url: "#" },
 ]
+
+// Parallax Dot Component
+function ParallaxDot({ i }: { i: number }) {
+  const { scrollYProgress } = useScroll();
+  const y = useTransform(scrollYProgress, [0, 1], [0, -200 - (i * 15)]);
+
+  return (
+    <motion.div
+      style={{
+        y,
+        left: `${Math.random() * 100}%`,
+        top: `${Math.random() * 100}%`,
+        backgroundColor: ["#4285F4", "#0F9D58", "#F4B400", "#DB4437"][i % 4],
+        animationDelay: `${Math.random() * 8}s`,
+        animationDuration: `${10 + Math.random() * 5}s`,
+      }}
+      className="absolute w-2 h-2 rounded-full animate-float opacity-0"
+    />
+  );
+}
 
 export default function GDGEventPage() {
   const [darkMode, setDarkMode] = useState(false)
@@ -234,25 +253,15 @@ export default function GDGEventPage() {
     <div className="min-h-screen bg-background text-foreground relative overflow-x-hidden">
       <div className="fixed inset-0 pointer-events-none z-0">
         {[...Array(15)].map((_, i) => (
-          <div
-            key={i}
-            className="absolute w-2 h-2 rounded-full animate-float opacity-0"
-            style={{
-              left: `${Math.random() * 100}%`,
-              top: `${Math.random() * 100}%`,
-              backgroundColor: ["#4285F4", "#0F9D58", "#F4B400", "#DB4437"][i % 4],
-              animationDelay: `${Math.random() * 8}s`,
-              animationDuration: `${10 + Math.random() * 5}s`,
-            }}
-          />
+          <ParallaxDot key={i} i={i} />
         ))}
       </div>
 
       <header className="fixed top-0 left-0 right-0 z-50 p-4 bg-background/80 backdrop-blur-md border-b">
         <div className="max-w-6xl mx-auto flex justify-between items-center">
           <button onClick={() => scrollToSection("home")} className="flex items-center">
-            {/* Increased width and height for better visibility */}
-            <Image src="/gdg-logo.png" alt="GDG Galgotias University Logo" width={300} height={60} className="h-14 w-auto object-contain" />
+            {/* LOGO SIZE INCREASED HERE */}
+            <Image src="/gdg-logo.png" alt="GDG Galgotias University Logo" width={350} height={70} className="h-16 w-auto object-contain" />
           </button>
           <nav className="hidden md:flex items-center space-x-6 text-sm font-medium">
             <button onClick={() => scrollToSection("about")} className="hover:text-primary transition-colors">About</button>
@@ -343,45 +352,26 @@ export default function GDGEventPage() {
           </div>
         </section>
 
-<section id="highlights" className="relative z-10 py-20 md:py-28 px-4 bg-muted/30">
-  <div className="max-w-5xl mx-auto">
-    <motion.h2
-      className="text-3xl md:text-4xl font-bold text-center mb-12"
-      initial={{ opacity: 0, y: 20 }}
-      whileInView={{ opacity: 1, y: 0 }}
-      viewport={{ once: true, amount: 0.5 }}
-      transition={{ duration: 0.5 }}
-    >
-      Event Highlights
-    </motion.h2>
-
-    <div className="grid md:grid-cols-3 gap-8">
-      {/* We can map over the data and apply motion to each card */}
-      {highlightsData.map((item, index) => (
-        <motion.div
-          key={item.title}
-          initial={{ opacity: 0, y: 50 }}
-          whileInView={{ opacity: 1, y: 0 }}
-          viewport={{ once: true, amount: 0.3 }}
-          transition={{ duration: 0.6, delay: index * 0.15 }} // Staggered delay
-        >
-          {/* The Card component itself doesn't need to change */}
-          <Card className="text-center group h-full hover:shadow-xl transition-all duration-300 hover:-translate-y-2 border-transparent hover:border-primary/50">
-            <CardHeader>
-              <div className={`w-16 h-16 bg-primary/10 rounded-full flex items-center justify-center mx-auto mb-4 transition-all duration-300 group-hover:scale-110`}>
-                <item.icon className={`w-8 h-8 text-primary`} />
-              </div>
-              <CardTitle>{item.title}</CardTitle>
-            </CardHeader>
-            <CardContent>
-              <p className="text-muted-foreground">{item.description}</p>
-            </CardContent>
-          </Card>
-        </motion.div>
-      ))}
-    </div>
-  </div>
-</section>
+        <section id="highlights" className="relative z-10 py-20 md:py-28 px-4 bg-muted/30">
+          <div className="max-w-5xl mx-auto">
+            <h2 className="text-3xl md:text-4xl font-bold text-center mb-12">Event Highlights</h2>
+            <div className="grid md:grid-cols-3 gap-8">
+              {highlightsData.map((item) => (
+                <Card key={item.title} className="text-center group hover:shadow-xl transition-all duration-300 hover:-translate-y-2 border-transparent hover:border-primary/50">
+                  <CardHeader>
+                    <div className={`w-16 h-16 bg-${item.color}/10 rounded-full flex items-center justify-center mx-auto mb-4 transition-all duration-300 group-hover:scale-110`}>
+                      <item.icon className={`w-8 h-8 text-${item.color}`} />
+                    </div>
+                    <CardTitle>{item.title}</CardTitle>
+                  </CardHeader>
+                  <CardContent>
+                    <p className="text-muted-foreground">{item.description}</p>
+                  </CardContent>
+                </Card>
+              ))}
+            </div>
+          </div>
+        </section>
 
         <section id="schedule" className="relative z-10 py-20 md:py-28 px-4">
           <div className="max-w-3xl mx-auto">
@@ -475,7 +465,6 @@ export default function GDGEventPage() {
       <footer className="relative z-10 py-12 px-4 border-t bg-background">
         <div className="max-w-4xl mx-auto text-center">
           <div className="flex items-center justify-center mb-4">
-              {/* Increased width and height for better visibility */}
               <Image src="/gdg-logo.png" alt="GDG Galgotias University Logo" width={300} height={60} className="h-16 w-auto object-contain" />
           </div>
           <p className="text-muted-foreground mb-4">Google Developer Group - Galgotias University</p>
